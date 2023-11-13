@@ -7,35 +7,15 @@ from git import Repo
 class GitFile:
     def __init__(self, filepath, filename, content):
         self.filepath = filepath
-        self.filefilename = filename
+        self.filename = filename
         self.content = content
 
-    def __repr__(self):
-        return f"GitFile(filepath={self.filepath}, filename={self.filename})"
-
-    def __str__(self):
-        return f"{self.filepath}/{self.filename}"
-
-    def __eq__(self, other):
-        return self.filepath == other.filepath and self.filename == other.filename
-
-    def __hash__(self):
-        return hash((self.filepath, self.filename))
-
-    def __lt__(self, other):
-        return str(self) < str(other)
-
-    def __le__(self, other):
-        return str(self) <= str(other)
-
-    def __gt__(self, other):
-        return str(self) > str(other)
-
-    def __ge__(self, other):
-        return str(self) >= str(other)
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
+    def to_dict(self):
+        return {
+            "filepath": self.filepath,
+            "filename": self.filename,
+            "content": self.content,
+        }
 
 
 class GitRepo:
@@ -59,9 +39,9 @@ class GitRepo:
                 file_content = base64.b64decode(
                     requests.get(item["url"], headers=self.headers).json()["content"]
                 ).decode("utf-8")
-                files.append(
-                    GitFile(item["path"], item["path"].split("/")[-1], file_content)
-                )
+                path = "/".join(item["path"].split("/")[:-1])
+                filename = item["path"].split("/")[-1]
+                files.append(GitFile(path, filename, file_content))
         return files
 
     def update_files(self, branch_name, git_files):
@@ -84,7 +64,7 @@ class GitRepo:
         blobs = []
         for file in git_files:
             blob_data = {
-                "content": base64.b64encode(file.content.encode("utf-8")).decode(
+                "content": base64.b64encode(file["content"].encode("utf-8")).decode(
                     "utf-8"
                 ),
                 "encoding": "base64",
@@ -94,18 +74,22 @@ class GitRepo:
             ).json()["sha"]
             blobs.append(
                 {
-                    "path": file.filepath,
+                    "path": (file["filepath"] + "/" if file["filepath"] != "" else "")
+                    + file["filename"],
                     "mode": "100644",
                     "type": "blob",
                     "sha": blob_sha,
                 }
             )
 
+        print(blobs)
         # Create a new tree
         tree_data = {"base_tree": base_tree_sha, "tree": blobs}
-        tree_sha = requests.post(
+        tree_sha_json = requests.post(
             f"{self.api_url}/git/trees", headers=self.headers, json=tree_data
-        ).json()["sha"]
+        ).json()
+        print(tree_sha_json)
+        tree_sha = tree_sha_json["sha"]
 
         # Create a new commit
         commit_data = {
