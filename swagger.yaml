@@ -1,0 +1,47 @@
+swagger: "2.0"
+info:
+  title: Your API
+  version: "1.0"
+paths:
+  /endpoint1:
+    get:
+      summary: Get a list of files
+      responses:
+        "200":
+          description: A list of files
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/File"
+  /endpoint2:
+    put:
+      summary: Update files
+      parameters:
+        - in: body
+          name: body
+          description: The branch and files to update
+          required: true
+          schema:
+            $ref: "#/definitions/UpdateFiles"
+      responses:
+        "204":
+          description: Successfully updated
+definitions:
+  File:
+    type: object
+    properties:
+      filepath:
+        type: string
+      content:
+        type: string
+      filename:
+        type: string
+  UpdateFiles:
+    type: object
+    properties:
+      branchName:
+        type: string
+      files:
+        type: array
+        items:
+          $ref: "#/definitions/File"
