@@ -35,7 +35,7 @@ class TestGitRepo(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
         test_file = git_file("test", "test2.txt", "This is a test content2")
-        # self.repo.update_files(test_branch, [test_file])
+        self.repo.update_files(test_branch, [test_file])
         # Verificar se o arquivo foi atualizado
         files = self.repo.list_files(test_branch)
 
@@ -44,12 +44,12 @@ class TestGitRepo(unittest.TestCase):
             if file["filepath"] == "test" and file["filename"] == "test.txt":
                 self.assertEqual(
                     file["content"],
-                    "This is a test content!!",
+                    "This is a test content",
                 )
             if file["filepath"] == "test" and file["filename"] == "test2.txt":
                 self.assertEqual(
                     file["content"],
-                    "This is a test content2!!",
+                    "This is a test content2",
                 )
 
 
