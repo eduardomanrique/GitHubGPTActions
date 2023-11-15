@@ -101,8 +101,12 @@ class GitRepo:
         response = requests.post(
             f"{self.api_url}/git/trees", headers=headers, data=data
         )
-        tree_sha = response.json()["sha"]
-        print("Create tree response:", response.json())
+        json_response = response.json()
+        if "sha" not in json_response:
+            raise Exception(f"Error creating tree: {json_response}")
+            return
+        tree_sha = json_response["sha"]
+        print("Create tree response:", json_response)
         print("\n\n")
         # Create a new commit with the new tree
         data = json.dumps(
