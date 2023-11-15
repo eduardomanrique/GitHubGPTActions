@@ -87,9 +87,14 @@ class GitRepo:
             blob_sha = response.json()["sha"]
             print("Create blob response:", response.json())
             print("\n\n")
+            path = (
+                f"{file['filepath']}/{file['filename']}"
+                if file["filepath"] != ""
+                else file["filename"]
+            )
             tree.append(
                 {
-                    "path": f"{file['filepath']}/{file['filename']}",
+                    "path": path,
                     "mode": "100644",
                     "type": "blob",
                     "sha": blob_sha,
@@ -104,7 +109,7 @@ class GitRepo:
         json_response = response.json()
         if "sha" not in json_response:
             raise Exception(f"Error creating tree for {self.api_url}: {json_response}")
-            return
+
         tree_sha = json_response["sha"]
         print("Create tree response:", json_response)
         print("\n\n")
