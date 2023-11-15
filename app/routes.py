@@ -4,6 +4,7 @@ from flask import jsonify, request
 from flasgger import swag_from
 from app import app
 from app.git import GitRepo
+import traceback
 
 load_dotenv()
 
@@ -36,5 +37,5 @@ def update_content():
         repo.update_files(data["branchName"], data["files"])
         return jsonify({"message": "Files updated successfully"}), 204
     except Exception as e:
-        app.logger.error(e)
-        return jsonify({"errorXXX": str(e)}), 400
+        error_trace = traceback.format_exc()
+        return jsonify({"errorXXX": error_trace}), 500
