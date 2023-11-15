@@ -1,21 +1,10 @@
-import os
 import base64
 import requests
-from git import Repo
+import json
 
 
-class GitFile:
-    def __init__(self, filepath, filename, content):
-        self.filepath = filepath
-        self.filename = filename
-        self.content = content
-
-    def to_dict(self):
-        return {
-            "filepath": self.filepath,
-            "filename": self.filename,
-            "content": self.content,
-        }
+def git_file(filepath, filename, content):
+    return {"filepath": filepath, "filename": filename, "content": content}
 
 
 class GitRepo:
@@ -41,23 +30,33 @@ class GitRepo:
                 ).decode("utf-8")
                 path = "/".join(item["path"].split("/")[:-1])
                 filename = item["path"].split("/")[-1]
-                files.append(GitFile(path, filename, file_content))
+                files.append(git_file(path, filename, file_content))
         return files
 
-    def update_files(self, branch_name, git_files):
+    def update_files(self, branch_name, git_files, default_branch="master"):
+        branch_url = f"{self.api_url}/branches/{branch_name}"
         # Check if the branch already exists
-        response = requests.get(
-            f"{self.api_url}/branches/{branch_name}", headers=self.headers
-        )
+        response = requests.get(branch_url, headers=self.headers)
+
         if response.status_code == 200:
-            raise Exception(f"Branch '{branch_name}' already exists.")
+            # Branch exists, get the latest commit SHA
+            latest_commit_sha = response.json()["commit"]["sha"]
+        else:
+            # Branch does not exist, create the branch
+            # Get the latest commit SHA of the default branch
+            default_branch_url = f"{self.api_url}/git/ref/heads/{default_branch}"
+            response = requests.get(default_branch_url, headers=self.headers)
+            latest_commit_sha = response.json()["object"]["sha"]
+
+            # Create the new branch
+            data = json.dumps(
+                {"ref": f"refs/heads/{branch_name}", "sha": latest_commit_sha}
+            )
+            requests.post(f"{self.api_url}/git/refs", headers=self.headers, data=data)
 
         # Get the SHA of the latest commit on master
-        master_sha = requests.get(
-            f"{self.api_url}/git/ref/heads/master", headers=self.headers
-        ).json()["object"]["sha"]
         base_tree_sha = requests.get(
-            f"{self.api_url}/git/commits/{master_sha}", headers=self.headers
+            f"{self.api_url}/git/commits/{latest_commit_sha}", headers=self.headers
         ).json()["tree"]["sha"]
 
         # Create blobs for each file
@@ -69,9 +68,11 @@ class GitRepo:
                 ),
                 "encoding": "base64",
             }
-            blob_sha = requests.post(
+            response = requests.post(
                 f"{self.api_url}/git/blobs", headers=self.headers, json=blob_data
-            ).json()["sha"]
+            )
+            print(response.json())
+            blob_sha = response.json()["sha"]
             blobs.append(
                 {
                     "path": (file["filepath"] + "/" if file["filepath"] != "" else "")
@@ -82,13 +83,11 @@ class GitRepo:
                 }
             )
 
-        print(blobs)
         # Create a new tree
         tree_data = {"base_tree": base_tree_sha, "tree": blobs}
         tree_sha_json = requests.post(
             f"{self.api_url}/git/trees", headers=self.headers, json=tree_data
         ).json()
-        print(tree_sha_json)
         tree_sha = tree_sha_json["sha"]
 
         # Create a new commit
@@ -99,24 +98,13 @@ class GitRepo:
                 "email": "eduardo.manrique@gmail.com",
                 "date": "2021-04-11T14:00:00+02:00",
             },
-            "parents": [master_sha],
+            "parents": [latest_commit_sha],
             "tree": tree_sha,
         }
         commit_sha = requests.post(
             f"{self.api_url}/git/commits", headers=self.headers, json=commit_data
         ).json()["sha"]
 
-        # Create a new branch
-        branch_data = {"ref": f"refs/heads/{branch_name}", "sha": commit_sha}
-        requests.post(
-            f"{self.api_url}/git/refs", headers=self.headers, json=branch_data
-        )
-
-    def delete_branch(self, branch_name):
-        # Check if the branch exists in the remote repository
-        if f"origin/{branch_name}" in self.repo.git.branch("-r"):
-            # Delete the branch from the remote repository
-            self.repo.git.push("origin", "--delete", branch_name)
-            return True
-        else:
-            return False
+        # Update the branch to point to the new commit
+        data = json.dumps({"sha": commit_sha, "force": True})
+        requests.patch(branch_url, headers=self.headers, data=data)

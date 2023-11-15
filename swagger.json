@@ -1,0 +1,83 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Your API",
+        "version": "1.0"
+    },
+    "servers": [
+        {
+            "url": "https://github-actions-ekm.azurewebsites.net"
+        }
+    ],
+    "paths": {
+        "/": {
+            "get": {
+                "operationId": "GetFiles",
+                "summary": "Get a list of files",
+                "responses": {
+                    "200": {
+                        "description": "A list of files",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/File"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "operationId": "UpdateFiles",
+                "summary": "Update files",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "The branch and files to update",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/UpdateFiles"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successfully updated"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "File": {
+                "type": "object",
+                "properties": {
+                    "filepath": {
+                        "type": "string"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "filename": {
+                        "type": "string"
+                    }
+                }
+            },
+            "UpdateFiles": {
+                "type": "object",
+                "properties": {
+                    "branchName": {
+                        "type": "string"
+                    },
+                    "files": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/File"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

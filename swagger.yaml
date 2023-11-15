@@ -3,7 +3,7 @@ info:
   title: Your API
   version: "1.0"
 paths:
-  /endpoint1:
+  /:
     get:
       summary: Get a list of files
       responses:
@@ -13,7 +13,6 @@ paths:
             type: array
             items:
               $ref: "#/definitions/File"
-  /endpoint2:
     put:
       summary: Update files
       parameters:
