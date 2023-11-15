@@ -103,7 +103,7 @@ class GitRepo:
         )
         json_response = response.json()
         if "sha" not in json_response:
-            raise Exception(f"Error creating tree: {json_response}")
+            raise Exception(f"Error creating tree for {self.api_url}: {json_response}")
             return
         tree_sha = json_response["sha"]
         print("Create tree response:", json_response)
