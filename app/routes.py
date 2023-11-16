@@ -20,10 +20,13 @@ def get_repo(project):
     return repos[project]
 
 
-@app.route("/")
-@swag_from("../swagger.yaml", methods=["GET"])
+@app.route("/", methods=["POST"])
+@swag_from("../swagger.yaml", methods=["POST"])
 def list_content():
-    project_name = request.args.get("project", default=None)
+    data = request.get_json()
+    if "body" in data:
+        data = data["body"]
+    project_name = data["projectName"]
     repo = get_repo(project_name)
     files = repo.list_files()
     return jsonify(files)
@@ -41,7 +44,7 @@ def update_content():
                 jsonify({"error": "Invalid request data", "details": data}),
                 400,
             )
-        project_name = data["project"]
+        project_name = data["projectName"]
         repo = get_repo(project_name)
         repo.update_files(data["branchName"], data["files"])
         return jsonify({"message": "Files updated successfully"}), 204

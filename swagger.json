@@ -16,12 +16,13 @@
                 "summary": "Get a list of files",
                 "parameters": [
                     {
-                        "in": "query",
-                        "name": "project",
+                        "in": "body",
+                        "name": "body",
+                        "description": "Query parameters",
+                        "required": true,
                         "schema": {
-                            "type": "string"
-                        },
-                        "description": "The name of the project to list files for"
+                            "$ref": "#/components/schemas/GetFiles"
+                        }
                     }
                 ],
                 "responses": {
@@ -77,7 +78,7 @@
             "UpdateFiles": {
                 "type": "object",
                 "properties": {
-                    "project": {
+                    "projectName": {
                         "type": "string"
                     },
                     "branchName": {
@@ -88,6 +89,14 @@
                         "items": {
                             "$ref": "#/definitions/File"
                         }
+                    }
+                }
+            },
+            "GetFiles": {
+                "type": "object",
+                "properties": {
+                    "projectName": {
+                        "type": "string"
                     }
                 }
             }

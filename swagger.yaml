@@ -6,6 +6,12 @@ paths:
   /:
     get:
       summary: Get a list of files
+      parameters:
+        - in: query
+          name: project_name
+          schema:
+            type: string
+          description: The name of the project to list files for
       responses:
         "200":
           description: A list of files
