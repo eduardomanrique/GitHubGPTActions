@@ -85,6 +85,8 @@ class GitRepo:
             print("Create blob response:", response.json())
             print("\n\n")
             path = file["filename"]
+            if path.startswith("/"):
+                path = path[1:]
 
             tree.append(
                 {
