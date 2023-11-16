@@ -3,8 +3,8 @@ import requests
 import json
 
 
-def git_file(filepath, filename, content):
-    return {"filepath": filepath, "filename": filename, "content": content}
+def git_file(filename, content):
+    return {"filename": filename, "content": content}
 
 
 class GitRepo:
@@ -17,9 +17,10 @@ class GitRepo:
         self.headers = {"Authorization": f"token {token}"}
         self.main_branch = main_branch
 
-    def list_files(self):
+    def list_files(self, branch_name=None):
+        branch_name = branch_name if branch_name else self.main_branch
         response = requests.get(
-            f"{self.api_url}/git/trees/{self.main_branch}?recursive=1",
+            f"{self.api_url}/git/trees/{branch_name}?recursive=1",
             headers=self.headers,
         )
         response.raise_for_status()
@@ -32,7 +33,7 @@ class GitRepo:
                 ).decode("utf-8")
                 path = "/".join(item["path"].split("/")[:-1])
                 filename = item["path"].split("/")[-1]
-                files.append(git_file(path, filename, file_content))
+                files.append(git_file(f"{path}/{filename}", file_content))
         return files
 
     def update_files(self, branch_name, git_files, commit_message):
@@ -83,11 +84,8 @@ class GitRepo:
             blob_sha = response.json()["sha"]
             print("Create blob response:", response.json())
             print("\n\n")
-            path = (
-                f"{file['filepath']}/{file['filename']}"
-                if "filepath" in file and file["filepath"] != ""
-                else file["filename"]
-            )
+            path = file["filename"]
+
             tree.append(
                 {
                     "path": path,

@@ -25,8 +25,8 @@ class TestGitRepo(unittest.TestCase):
 
     def test_update_files(self):
         test_branch = "test-branch"
-        test_file = git_file("test", "test.txt", "This is a test content")
-        self.repo.update_files(test_branch, [test_file])
+        test_file = git_file("test/test.txt", "This is a test content")
+        self.repo.update_files(test_branch, [test_file], "test1")
 
         # Verificar se o branch foi criado
         response = requests.get(
@@ -34,23 +34,27 @@ class TestGitRepo(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-        test_file = git_file("test", "test2.txt", "This is a test content2")
-        self.repo.update_files(test_branch, [test_file])
+        test_file = git_file("test/test2.txt", "This is a test content2")
+        self.repo.update_files(test_branch, [test_file], "test2")
         # Verificar se o arquivo foi atualizado
         files = self.repo.list_files(test_branch)
 
+        count = 0
         # find file test/test2.txt content in files
         for file in files:
-            if file["filepath"] == "test" and file["filename"] == "test.txt":
+            if file["filename"] == "test/test.txt":
+                count += 1
                 self.assertEqual(
                     file["content"],
                     "This is a test content",
                 )
-            if file["filepath"] == "test" and file["filename"] == "test2.txt":
+            if file["filename"] == "test/test2.txt":
+                count += 1
                 self.assertEqual(
                     file["content"],
                     "This is a test content2",
                 )
+        self.assertEqual(count, 2)
 
 
 if __name__ == "__main__":

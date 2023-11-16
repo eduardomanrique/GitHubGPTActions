@@ -64,9 +64,6 @@
             "File": {
                 "type": "object",
                 "properties": {
-                    "filepath": {
-                        "type": "string"
-                    },
                     "content": {
                         "type": "string"
                     },
