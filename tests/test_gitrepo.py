@@ -15,7 +15,7 @@ class TestGitRepo(unittest.TestCase):
         # Substitua com seu token de acesso pessoal e URL do repositório de teste
         cls.token = os.getenv("GITHUB_TEST_TOKEN")
         cls.repo_url = "https://github.com/eduardomanrique/tests.git"
-        cls.repo = GitRepo(cls.repo_url, cls.token)
+        cls.repo = GitRepo(cls.repo_url, cls.token, "master")
 
     def stest_list_files(self):
         files = self.repo.list_files()

@@ -8,17 +8,19 @@ def git_file(filepath, filename, content):
 
 
 class GitRepo:
-    def __init__(self, repo_url, token):
+    def __init__(self, repo_url, token, main_branch):
         self.repo_url = repo_url
         self.token = token
         # Ajuste a URL do repositório aqui
         repo_name = repo_url.replace("https://github.com/", "").replace(".git", "")
         self.api_url = f"https://api.github.com/repos/{repo_name}"
         self.headers = {"Authorization": f"token {token}"}
+        self.main_branch = main_branch
 
-    def list_files(self, branch="master"):
+    def list_files(self):
         response = requests.get(
-            f"{self.api_url}/git/trees/{branch}?recursive=1", headers=self.headers
+            f"{self.api_url}/git/trees/{self.main_branch}?recursive=1",
+            headers=self.headers,
         )
         response.raise_for_status()
         tree = response.json()["tree"]
@@ -33,13 +35,7 @@ class GitRepo:
                 files.append(git_file(path, filename, file_content))
         return files
 
-    def update_files(
-        self,
-        branch_name,
-        git_files,
-        commit_message="Update files",
-        default_branch="master",
-    ):
+    def update_files(self, branch_name, git_files, commit_message="Update files"):
         # Headers for the API requests
         headers = {
             "Authorization": f"token {self.token}",
@@ -56,7 +52,7 @@ class GitRepo:
         else:
             # Branch does not exist, create the branch
             # Get the latest commit SHA of the default branch
-            default_branch_url = f"{self.api_url}/git/ref/heads/{default_branch}"
+            default_branch_url = f"{self.api_url}/git/ref/heads/{self.main_branch}"
             response = requests.get(default_branch_url, headers=headers)
             latest_commit_sha = response.json()["object"]["sha"]
 

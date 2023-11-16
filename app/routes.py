@@ -15,7 +15,10 @@ def get_repo(project):
     if project not in repos:
         token = os.getenv(f"{project}_TOKEN")
         repo_name = os.getenv(f"{project}_REPO_NAME")
-        repos[project] = GitRepo(repo_name, token)
+        main_branch = os.getenv(f"{project}_MAIN_BRANCH")
+        repos[project] = GitRepo(
+            repo_name, token, main_branch if main_branch else "main"
+        )
 
     return repos[project]
 
