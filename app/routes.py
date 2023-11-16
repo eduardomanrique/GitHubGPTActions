@@ -18,7 +18,7 @@ repo = GitRepo(REPO_NAME, TOKEN)
 @swag_from("../swagger.yaml", methods=["GET"])
 def list_content():
     files = repo.list_files()
-    return jsonify([file.to_dict() for file in files])
+    return jsonify(files)
 
 
 @app.route("/", methods=["PUT"])
