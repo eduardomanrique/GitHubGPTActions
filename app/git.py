@@ -89,7 +89,7 @@ class GitRepo:
             print("\n\n")
             path = (
                 f"{file['filepath']}/{file['filename']}"
-                if file["filepath"] != ""
+                if "filepath" in file and file["filepath"] != ""
                 else file["filename"]
             )
             tree.append(
