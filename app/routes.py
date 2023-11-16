@@ -8,15 +8,23 @@ import traceback
 
 load_dotenv()
 
-TOKEN = os.getenv("TOKEN")
-REPO_NAME = os.getenv("REPO_NAME")
+repos = {}
 
-repo = GitRepo(REPO_NAME, TOKEN)
+
+def get_repo(project):
+    if project not in repos:
+        token = os.getenv(f"{project}_TOKEN")
+        repo_name = os.getenv(f"{project}_REPO_NAME")
+        repos[project] = GitRepo(repo_name, token)
+
+    return repos[project]
 
 
 @app.route("/")
 @swag_from("../swagger.yaml", methods=["GET"])
 def list_content():
+    project_name = request.args.get("project", default=None)
+    repo = get_repo(project_name)
     files = repo.list_files()
     return jsonify(files)
 
@@ -33,7 +41,8 @@ def update_content():
                 jsonify({"error": "Invalid request data", "details": data}),
                 400,
             )
-
+        project_name = data["project"]
+        repo = get_repo(project_name)
         repo.update_files(data["branchName"], data["files"])
         return jsonify({"message": "Files updated successfully"}), 204
     except Exception as e:

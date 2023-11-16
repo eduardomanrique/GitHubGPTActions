@@ -14,6 +14,16 @@
             "get": {
                 "operationId": "GetFiles",
                 "summary": "Get a list of files",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "project",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "The name of the project to list files for"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "A list of files",
@@ -67,6 +77,9 @@
             "UpdateFiles": {
                 "type": "object",
                 "properties": {
+                    "project": {
+                        "type": "string"
+                    },
                     "branchName": {
                         "type": "string"
                     },
