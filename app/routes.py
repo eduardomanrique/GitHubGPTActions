@@ -49,7 +49,11 @@ def update_content():
             )
         project_name = data["projectName"]
         repo = get_repo(project_name)
-        repo.update_files(data["branchName"], data["files"])
+        repo.update_files(
+            data["branchName"],
+            data["files"],
+            "Update files" if "commitMessage" not in data else data["commitMessage"],
+        )
         return jsonify({"message": "Files updated successfully"}), 204
     except Exception as e:
         error_trace = traceback.format_exc()

@@ -35,7 +35,7 @@ class GitRepo:
                 files.append(git_file(path, filename, file_content))
         return files
 
-    def update_files(self, branch_name, git_files, commit_message="Update files"):
+    def update_files(self, branch_name, git_files, commit_message):
         # Headers for the API requests
         headers = {
             "Authorization": f"token {self.token}",

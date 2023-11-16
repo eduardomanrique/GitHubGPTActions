@@ -84,6 +84,9 @@
                     "branchName": {
                         "type": "string"
                     },
+                    "commitMessage": {
+                        "type": "string"
+                    },
                     "files": {
                         "type": "array",
                         "items": {
