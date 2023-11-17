@@ -29,6 +29,11 @@ def list_content():
     data = request.get_json()
     if "body" in data:
         data = data["body"]
+    if "projectName" not in data:
+        return (
+            jsonify({"error": "Project name is mandatory"}),
+            400,
+        )
     project_name = data["projectName"]
     repo = get_repo(project_name)
     files = repo.list_files()
