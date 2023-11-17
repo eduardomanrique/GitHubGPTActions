@@ -42,9 +42,19 @@ def update_content():
         data = request.get_json()
         if "body" in data:
             data = data["body"]
-        if not data or "branchName" not in data or "files" not in data:
+        if not data or "files" not in data:
             return (
                 jsonify({"error": "Invalid request data", "details": data}),
+                400,
+            )
+        if "branchName" not in data:
+            return (
+                jsonify({"error": "Branch name is mandatory"}),
+                400,
+            )
+        if "projectName" not in data:
+            return (
+                jsonify({"error": "Project name is mandatory"}),
                 400,
             )
         project_name = data["projectName"]
