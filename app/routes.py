@@ -13,8 +13,10 @@ repos = {}
 
 def get_repo(project):
     if project not in repos:
-        token = os.getenv(f"{project}_TOKEN")
         repo_name = os.getenv(f"{project}_REPO_NAME")
+        if not repo_name:
+            return None
+        token = os.getenv(f"{project}_TOKEN")
         main_branch = os.getenv(f"{project}_MAIN_BRANCH")
         repos[project] = GitRepo(
             repo_name, token, main_branch if main_branch else "main"
@@ -36,6 +38,11 @@ def list_content():
         )
     project_name = data["projectName"]
     repo = get_repo(project_name)
+    if not repo:
+        return (
+            jsonify({"error": "Project not found"}),
+            404,
+        )
     files = repo.list_files()
     return jsonify(files)
 
