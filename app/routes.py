@@ -42,7 +42,7 @@ def list_content():
             400,
         )
     project_name = data["projectName"]
-    project_name = data["branchName"]
+    branch_name = data["branchName"]
     repo = get_repo(project_name)
     if not repo:
         return (
