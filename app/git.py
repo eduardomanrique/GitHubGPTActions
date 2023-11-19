@@ -29,23 +29,7 @@ class GitRepo:
             headers=self.headers,
         )
         if response.status_code != 200:
-            print("Branch does not exist")
-            # Branch does not exist, create the branch
-            # Get the latest commit SHA of the default branch
-            default_branch_url = f"{self.api_url}/git/ref/heads/{self.main_branch}"
-            response = requests.get(default_branch_url, headers=self.headers)
-            latest_commit_sha = response.json()["object"]["sha"]
-
-            # Create the new branch
-            data = json.dumps(
-                {"ref": f"refs/heads/{branch_name}", "sha": latest_commit_sha}
-            )
-            response = requests.post(
-                f"{self.api_url}/git/refs", headers=self.headers, data=data
-            )
-            print("Create branch response:", response.json())
-            print("\n\n")
-            time.sleep(5)
+            self.create_branch(branch_name)
             # Get the reference of the new branch
             response = requests.get(
                 f"{self.api_url}/git/trees/{branch_name}?recursive=1",
@@ -73,7 +57,7 @@ class GitRepo:
             # Branch exists, get the latest commit SHA
             latest_commit_sha = response.json()["object"]["sha"]
         else:
-            raise Exception(f"Branch {branch_name} does not exist")
+            latest_commit_sha = self.create_branch(branch_name)
 
         # Create a new blob for each file
         tree = []
@@ -141,3 +125,23 @@ class GitRepo:
         )
         print("Update branch response:", response.json())
         print("\n\n")
+
+    def create_branch(self, branch_name):
+        print("Branch does not exist")
+        # Branch does not exist, create the branch
+        # Get the latest commit SHA of the default branch
+        default_branch_url = f"{self.api_url}/git/ref/heads/{self.main_branch}"
+        response = requests.get(default_branch_url, headers=self.headers)
+        latest_commit_sha = response.json()["object"]["sha"]
+
+        # Create the new branch
+        data = json.dumps(
+            {"ref": f"refs/heads/{branch_name}", "sha": latest_commit_sha}
+        )
+        response = requests.post(
+            f"{self.api_url}/git/refs", headers=self.headers, data=data
+        )
+        print("Create branch response:", response.json())
+        print("\n\n")
+        time.sleep(5)
+        return latest_commit_sha

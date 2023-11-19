@@ -23,6 +23,11 @@ class TestGitRepo(unittest.TestCase):
         self.assertGreater(len(files), 0)
         # print(json.dumps(files, indent=4))
 
+    def test_update_files2(self):
+        test_branch = "test-branch2"
+        test_file = git_file("test/testx.txt", "This is a test content")
+        self.repo.update_files(test_branch, [test_file], "test1")
+
     def test_update_files(self):
         test_branch = "test-branch"
         self.repo.list_files(test_branch)
