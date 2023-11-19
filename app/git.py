@@ -1,6 +1,7 @@
 import base64
 import requests
 import json
+import time
 
 
 def git_file(filename, content):
@@ -14,16 +15,43 @@ class GitRepo:
         # Ajuste a URL do repositório aqui
         repo_name = repo_url.replace("https://github.com/", "").replace(".git", "")
         self.api_url = f"https://api.github.com/repos/{repo_name}"
-        self.headers = {"Authorization": f"token {token}"}
+        self.headers = {
+            "Authorization": f"token {self.token}",
+            "Accept": "application/vnd.github.v3+json",
+        }
         self.main_branch = main_branch
 
     def list_files(self, branch_name=None):
         branch_name = branch_name if branch_name else self.main_branch
+
         response = requests.get(
             f"{self.api_url}/git/trees/{branch_name}?recursive=1",
             headers=self.headers,
         )
-        response.raise_for_status()
+        if response.status_code != 200:
+            print("Branch does not exist")
+            # Branch does not exist, create the branch
+            # Get the latest commit SHA of the default branch
+            default_branch_url = f"{self.api_url}/git/ref/heads/{self.main_branch}"
+            response = requests.get(default_branch_url, headers=self.headers)
+            latest_commit_sha = response.json()["object"]["sha"]
+
+            # Create the new branch
+            data = json.dumps(
+                {"ref": f"refs/heads/{branch_name}", "sha": latest_commit_sha}
+            )
+            response = requests.post(
+                f"{self.api_url}/git/refs", headers=self.headers, data=data
+            )
+            print("Create branch response:", response.json())
+            print("\n\n")
+            time.sleep(5)
+            # Get the reference of the new branch
+            response = requests.get(
+                f"{self.api_url}/git/trees/{branch_name}?recursive=1",
+                headers=self.headers,
+            )
+
         tree = response.json()["tree"]
         files = []
         for item in tree:
@@ -37,35 +65,15 @@ class GitRepo:
         return files
 
     def update_files(self, branch_name, git_files, commit_message):
-        # Headers for the API requests
-        headers = {
-            "Authorization": f"token {self.token}",
-            "Accept": "application/vnd.github.v3+json",
-        }
-
         # Check if branch exists
         branch_url = f"{self.api_url}/git/ref/heads/{branch_name}"
-        response = requests.get(branch_url, headers=headers)
+        response = requests.get(branch_url, headers=self.headers)
 
         if response.status_code == 200:
             # Branch exists, get the latest commit SHA
             latest_commit_sha = response.json()["object"]["sha"]
         else:
-            # Branch does not exist, create the branch
-            # Get the latest commit SHA of the default branch
-            default_branch_url = f"{self.api_url}/git/ref/heads/{self.main_branch}"
-            response = requests.get(default_branch_url, headers=headers)
-            latest_commit_sha = response.json()["object"]["sha"]
-
-            # Create the new branch
-            data = json.dumps(
-                {"ref": f"refs/heads/{branch_name}", "sha": latest_commit_sha}
-            )
-            response = requests.post(
-                f"{self.api_url}/git/refs", headers=headers, data=data
-            )
-            print("Create branch response:", response.json())
-            print("\n\n")
+            raise Exception(f"Branch {branch_name} does not exist")
 
         # Create a new blob for each file
         tree = []
@@ -79,7 +87,7 @@ class GitRepo:
                 }
             )
             response = requests.post(
-                f"{self.api_url}/git/blobs", headers=headers, data=data
+                f"{self.api_url}/git/blobs", headers=self.headers, data=data
             )
             blob_sha = response.json()["sha"]
             print("Create blob response:", response.json())
@@ -100,7 +108,7 @@ class GitRepo:
         # Create a new tree with the new blobs
         data = json.dumps({"base_tree": latest_commit_sha, "tree": tree})
         response = requests.post(
-            f"{self.api_url}/git/trees", headers=headers, data=data
+            f"{self.api_url}/git/trees", headers=self.headers, data=data
         )
         json_response = response.json()
         if "sha" not in json_response:
@@ -118,7 +126,7 @@ class GitRepo:
             }
         )
         response = requests.post(
-            f"{self.api_url}/git/commits", headers=headers, data=data
+            f"{self.api_url}/git/commits", headers=self.headers, data=data
         )
         commit_sha = response.json()["sha"]
         print("Create commit response:", response.json())
@@ -127,7 +135,9 @@ class GitRepo:
         data = json.dumps({"sha": commit_sha, "force": True})
 
         response = requests.patch(
-            f"{self.api_url}/git/refs/heads/{branch_name}", headers=headers, data=data
+            f"{self.api_url}/git/refs/heads/{branch_name}",
+            headers=self.headers,
+            data=data,
         )
         print("Update branch response:", response.json())
         print("\n\n")

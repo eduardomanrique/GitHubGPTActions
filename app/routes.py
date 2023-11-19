@@ -36,14 +36,20 @@ def list_content():
             jsonify({"error": "Project name is mandatory"}),
             400,
         )
+    if "branchName" not in data:
+        return (
+            jsonify({"error": "Branch name is mandatory"}),
+            400,
+        )
     project_name = data["projectName"]
+    project_name = data["branchName"]
     repo = get_repo(project_name)
     if not repo:
         return (
             jsonify({"error": "Project not found"}),
             404,
         )
-    files = repo.list_files()
+    files = repo.list_files(branch_name)
     return jsonify(files)
 
 

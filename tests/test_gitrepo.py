@@ -17,14 +17,15 @@ class TestGitRepo(unittest.TestCase):
         cls.repo_url = "https://github.com/eduardomanrique/tests.git"
         cls.repo = GitRepo(cls.repo_url, cls.token, "master")
 
-    def stest_list_files(self):
-        files = self.repo.list_files()
+    def test_list_files(self):
+        files = self.repo.list_files("test-branch")
         self.assertIsInstance(files, list)
         self.assertGreater(len(files), 0)
         # print(json.dumps(files, indent=4))
 
     def test_update_files(self):
         test_branch = "test-branch"
+        self.repo.list_files(test_branch)
         test_file = git_file("test/test.txt", "This is a test content")
         self.repo.update_files(test_branch, [test_file], "test1")
 
@@ -39,9 +40,11 @@ class TestGitRepo(unittest.TestCase):
         # Verificar se o arquivo foi atualizado
         files = self.repo.list_files(test_branch)
 
+        print(json.dumps(files, indent=4))
         count = 0
         # find file test/test2.txt content in files
         for file in files:
+            print(file["filename"])
             if file["filename"] == "test/test.txt":
                 count += 1
                 self.assertEqual(
