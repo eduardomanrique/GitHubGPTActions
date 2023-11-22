@@ -45,6 +45,9 @@ class GitRepo:
                 ).decode("utf-8")
                 path = "/".join(item["path"].split("/")[:-1])
                 filename = item["path"].split("/")[-1]
+                # skip if the file is binary
+                if "\0" in file_content:
+                    continue
                 files.append(git_file(f"{path}/{filename}", file_content))
         return files
 
