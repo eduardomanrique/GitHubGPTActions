@@ -40,14 +40,18 @@ class GitRepo:
         files = []
         for item in tree:
             if item["type"] == "blob":
+                # skip if the file is binary
+                if (
+                    item["path"].endswith(".png")
+                    or item["path"].endswith(".jpg")
+                    or item["path"].endswith(".jpeg")
+                ):
+                    continue
                 file_content = base64.b64decode(
                     requests.get(item["url"], headers=self.headers).json()["content"]
                 ).decode("utf-8")
                 path = "/".join(item["path"].split("/")[:-1])
                 filename = item["path"].split("/")[-1]
-                # skip if the file is binary
-                if "\0" in file_content:
-                    continue
                 files.append(git_file(f"{path}/{filename}", file_content))
         return files
 
